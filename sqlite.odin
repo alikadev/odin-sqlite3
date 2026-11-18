@@ -70,7 +70,7 @@ when ODIN_OS == .Windows {
 			when USE_SQLCIPHER {
 				foreign import sqlite "libsqlcipher.a"
 			} else {
-				foreign import sqlite "libsqlite3.a"
+				foreign import sqlite "libsqlite3-macos.o"
 			}
 		}
 	}
@@ -100,7 +100,7 @@ when ODIN_OS == .Windows {
 			when USE_SQLCIPHER {
 				foreign import sqlite "libsqlcipher.a"
 			} else {
-				foreign import sqlite "libsqlite3.a"
+				foreign import sqlite "libsqlite3-linux.a"
 			}
 		}
 	}
@@ -264,8 +264,8 @@ foreign sqlite {
 	open_v2 :: proc "c" (filename: cstring, db: ^^Connection, flags: c.int, z_vfs: cstring) -> Result_Code ---
 	close :: proc "c" (db: ^Connection) -> Result_Code ---
 	close_v2 :: proc "c" (db: ^Connection) -> Result_Code ---
-	prepare :: proc "c" (db: ^Connection, sql: cstring, n_bytes: c.int, statement: ^^Statement, tail: ^^cstring) -> Result_Code ---
-	prepare_v2 :: proc "c" (db: ^Connection, sql: cstring, n_bytes: c.int, statement: ^^Statement, tail: ^^cstring) -> Result_Code ---
+	prepare :: proc "c" (db: ^Connection, sql: cstring, n_bytes: c.int, statement: ^^Statement, tail: ^cstring) -> Result_Code ---
+	prepare_v2 :: proc "c" (db: ^Connection, sql: cstring, n_bytes: c.int, statement: ^^Statement, tail: ^cstring) -> Result_Code ---
 	step :: proc "c" (statement: ^Statement) -> Result_Code ---
 	finalize :: proc "c" (statememt: ^Statement) -> Result_Code ---
 	exec :: proc "c" (db: ^Connection, sql: cstring, cb: proc "c" (ctx: rawptr, argc: c.int, argv: [^]cstring, col_names: [^]cstring) -> c.int, ctx: rawptr, err: ^cstring) -> Result_Code ---
