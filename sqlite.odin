@@ -336,6 +336,7 @@ foreign sqlite {
 	@(require_results)
 	compileoption_get :: proc "c" (n: c.int) -> cstring ---
 	complete :: proc "c" (sql: cstring) -> c.int ---
+	last_insert_rowid :: proc "c" (db: ^Connection) -> c.int ---
 	complete16 :: proc "c" (sql: cstring) -> c.int ---
 	//  TODO: this function should also have varargs
 	config :: proc "c" (option: Config_Option) -> Result_Code ---
