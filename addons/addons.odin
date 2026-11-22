@@ -1,16 +1,12 @@
 package addons
 
 import sqlite3 ".."
-import "base:runtime"
 import "core:c"
 import "core:fmt"
 import "core:log"
-import "core:mem"
 import "core:reflect"
 import "core:slice"
-import "core:strconv"
 import "core:strings"
-import "core:text/regex"
 
 Runtime_Config :: struct {
 	extra_runtime_checks: bool,
@@ -79,10 +75,10 @@ read_all_rows :: proc(stmt: ^sqlite3.Statement, out: ^[dynamic]$T) -> sqlite3.Re
 				return .Internal
 			}
 
-			if err := write_struct_field_from_statement(&item, field_type, stmt, c.int(i));
-			   err != nil {
-				log.error(err)
-				free_query_error(err)
+			if err_wr := write_struct_field_from_statement(&item, field_type, stmt, c.int(i));
+			   err_wr != nil {
+				log.error(err_wr)
+				free_query_error(err_wr)
 				return .Internal
 			}
 		}
@@ -126,27 +122,27 @@ prepare :: proc(
 	for &param in params {
 		idx := c.int(param.index)
 
-		if param.value == nil {
+		switch v in param.value {
+		case nil:
 			sqlite3.bind_null(stmt^, idx) or_return
-		} else if v, ok := param.value.(i32); ok {
+		case i32:
 			sqlite3.bind_int(stmt^, idx, c.int(v)) or_return
-		} else if v, ok := param.value.(i64); ok {
+		case i64:
 			sqlite3.bind_int64(stmt^, idx, c.int64_t(v)) or_return
-		} else if v, ok := param.value.([]byte); ok {
+		case []byte:
 			sqlite3.bind_blob64(stmt^, idx, slice.as_ptr(v), c.int64_t(len(v)), {behaviour = .Static}) or_return
-		} else if v, ok := param.value.(bool); ok {
+		case bool:
 			sqlite3.bind_int(stmt^, idx, c.int(v ? 1 : 0)) or_return
-		} else if v, ok := param.value.(string); ok {
+		case string:
 			// Sqlite treats our parameter as a "cstring" if we pass a negative length.
 			// Explicitly it's just a slice.
 			// https://sqlite.org/c3ref/bind_blob.html.
 			cstr := strings.unsafe_string_to_cstring(v)
 			sqlite3.bind_text(stmt^, idx, cstr, c.int(len(v)), {behaviour = .Static}) or_return
-		} else {
+		case f64:
 			log.errorf("unhandled parameter type {}", param.value)
 			return .Internal
 		}
-
 	}
 
 	exp_statement := sqlite3.expanded_sql(stmt^)
